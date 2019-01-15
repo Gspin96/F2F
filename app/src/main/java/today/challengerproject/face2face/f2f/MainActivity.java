@@ -1,12 +1,25 @@
 package today.challengerproject.face2face.f2f;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+
+import java.io.IOException;
+
+import static today.challengerproject.face2face.f2f.HelperMethods.dipToPixels;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -24,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
      * user interaction before hiding the system UI.
      */
     private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
+
+    private int PICK_IMAGE_REQUEST = 1;
 
     /**
      * Some older devices needs a small delay between UI widget updates
@@ -88,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
         mVisible = true;
         mContentView = findViewById(R.id.fullscreen_content);
+        FloatingActionButton addImgButton = findViewById(R.id.add_image);
 
 
         // Set up the user interaction to manually show or hide the system UI.
@@ -97,6 +113,14 @@ public class MainActivity extends AppCompatActivity {
                 toggle();
             }
         });
+
+        addImgButton.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addImage();
+            }
+        });
+
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
@@ -151,4 +175,47 @@ public class MainActivity extends AppCompatActivity {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
+
+    private void addImage() {
+        Intent intent = new Intent();
+        // Show only images, no videos or anything else
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        // Always show the chooser (if there are multiple options available)
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+
+            Uri uri = data.getData();
+
+            try {
+
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                int width = (int) ( dipToPixels( this,128) / bitmap.getHeight() * bitmap.getWidth() );
+                bitmap = Bitmap.createScaledBitmap(bitmap, width, (int) dipToPixels(this, 128), false);
+                // Log.d(TAG, String.valueOf(bitmap));
+
+                LinearLayout imageContainer = findViewById(R.id.imageContainer);
+
+                // Add ImageView to LinearLayout
+                if (imageContainer != null) {
+                    ImageView imageView = new ImageView(this);
+                    imageView.setLayoutParams(new LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT, 1));
+                    imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                    imageContainer.addView(imageView, 1);
+
+                    imageView.setImageBitmap(bitmap);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 }
