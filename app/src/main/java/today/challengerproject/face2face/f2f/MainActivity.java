@@ -195,9 +195,11 @@ public class MainActivity extends AppCompatActivity {
 
             try {
 
+                int height_dp = 256;
+
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-                int width = (int) ( dipToPixels( this,128) / bitmap.getHeight() * bitmap.getWidth() );
-                bitmap = Bitmap.createScaledBitmap(bitmap, width, (int) dipToPixels(this, 128), false);
+                int width = (int) ( dipToPixels( this, height_dp) / bitmap.getHeight() * bitmap.getWidth() );
+                bitmap = Bitmap.createScaledBitmap(bitmap, width, (int) dipToPixels(this, height_dp), false);
                 // Log.d(TAG, String.valueOf(bitmap));
 
                 LinearLayout imageContainer = findViewById(R.id.imageContainer);
