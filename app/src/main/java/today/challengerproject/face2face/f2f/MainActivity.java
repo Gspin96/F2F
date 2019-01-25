@@ -6,6 +6,8 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -193,12 +195,22 @@ public class MainActivity extends AppCompatActivity {
 
             Uri uri = data.getData();
 
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+            ImageSetterFragment fragment = ImageSetterFragment.newInstance(data);
+            fragmentTransaction.add(R.id.imageContainer, fragment);
+            fragmentTransaction.commit();
+
             try {
 
                 int height_dp = 256;
 
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+
                 int width = (int) ( dipToPixels( this, height_dp) / bitmap.getHeight() * bitmap.getWidth() );
+                int imageMargin = (int) dipToPixels(this, 12);
+
                 bitmap = Bitmap.createScaledBitmap(bitmap, width, (int) dipToPixels(this, height_dp), false);
                 // Log.d(TAG, String.valueOf(bitmap));
 
@@ -207,10 +219,14 @@ public class MainActivity extends AppCompatActivity {
                 // Add ImageView to LinearLayout
                 if (imageContainer != null) {
                     ImageView imageView = new ImageView(this);
-                    imageView.setLayoutParams(new LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT, 1));
-                    imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-                    imageContainer.addView(imageView, 1);
 
+                    LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT, 1);
+                    imageParams.setMargins(0,0, imageMargin, imageMargin );
+
+                    imageView.setLayoutParams(imageParams);
+                    imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+
+                    imageContainer.addView(imageView, 1);
                     imageView.setImageBitmap(bitmap);
                 }
 
