@@ -4,6 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginHorizontal="12dp"
+    android:layout_weight="1"
     tools:context=".ImageSetterFragment">
 
     <ImageView
@@ -12,7 +14,7 @@
         android:layout_height="wrap_content" />
 
     <ImageButton
-        android:id="@+id/imageButton"
+        android:id="@+id/clearButton"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:background="@android:color/transparent"

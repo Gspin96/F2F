@@ -193,46 +193,14 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
 
-            Uri uri = data.getData();
-
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-            ImageSetterFragment fragment = ImageSetterFragment.newInstance(data);
-            fragmentTransaction.add(R.id.imageContainer, fragment);
+            String s = "";
+
+            ImageSetterFragment fragment = ImageSetterFragment.newInstance(data, this);
+            fragmentTransaction.add(R.id.imageContainer, fragment, s.valueOf( (int) (1000 * Math.random()) ) );
             fragmentTransaction.commit();
-
-            try {
-
-                int height_dp = 256;
-
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-
-                int width = (int) ( dipToPixels( this, height_dp) / bitmap.getHeight() * bitmap.getWidth() );
-                int imageMargin = (int) dipToPixels(this, 12);
-
-                bitmap = Bitmap.createScaledBitmap(bitmap, width, (int) dipToPixels(this, height_dp), false);
-                // Log.d(TAG, String.valueOf(bitmap));
-
-                LinearLayout imageContainer = findViewById(R.id.imageContainer);
-
-                // Add ImageView to LinearLayout
-                if (imageContainer != null) {
-                    ImageView imageView = new ImageView(this);
-
-                    LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT, 1);
-                    imageParams.setMargins(0,0, imageMargin, imageMargin );
-
-                    imageView.setLayoutParams(imageParams);
-                    imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-
-                    imageContainer.addView(imageView, 1);
-                    imageView.setImageBitmap(bitmap);
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
