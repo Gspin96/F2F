@@ -11,7 +11,6 @@ import android.support.v7.widget.AppCompatImageButton;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 
 import java.io.IOException;
@@ -46,7 +45,6 @@ public class ImageSetterFragment extends Fragment {
      * @param data the image data.
      * @return A new instance of fragment ImageSetterFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static ImageSetterFragment newInstance(Intent data, Context context) {
         ImageSetterFragment fragment = new ImageSetterFragment();
 
@@ -58,6 +56,9 @@ public class ImageSetterFragment extends Fragment {
 
     public void setData(Intent data) {
         this.data = data;
+    }
+    public Intent getData() {
+        return data;
     }
 
     @Override
@@ -104,13 +105,6 @@ public class ImageSetterFragment extends Fragment {
         }
 
         return view;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        /*if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }*/
     }
 
     @Override

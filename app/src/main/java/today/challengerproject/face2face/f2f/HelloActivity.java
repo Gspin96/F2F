@@ -1,29 +1,20 @@
 package today.challengerproject.face2face.f2f;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.TextInputEditText;
-import android.support.design.widget.TextInputLayout;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import android.view.MenuItem;
+import android.support.v4.app.NavUtils;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
-public class MainActivity extends AppCompatActivity {
+public class HelloActivity extends AppCompatActivity {
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -35,8 +26,6 @@ public class MainActivity extends AppCompatActivity {
      * user interaction before hiding the system UI.
      */
     private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
-
-    private int PICK_IMAGE_REQUEST = 1;
 
     /**
      * Some older devices needs a small delay between UI widget updates
@@ -91,45 +80,24 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private TextInputLayout name;
-    private TextInputLayout bio;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_hello);
 
         getSupportActionBar().hide();
 
         mVisible = true;
-        mContentView = findViewById(R.id.fullscreen_content);
-        FloatingActionButton addImgButton = findViewById(R.id.add_image);
+        mContentView = findViewById(R.id.hello_content);
 
-
+        // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 toggle();
             }
         });
-        addImgButton.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                addImage();
-            }
-        });
-
-        Button confirm = findViewById(R.id.confirm);
-        confirm.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                confirmEntry();
-            }
-        });
-
-        this.name = findViewById(R.id.inputName);
-        this.bio = findViewById(R.id.inputBio);
 
     }
 
@@ -143,6 +111,17 @@ public class MainActivity extends AppCompatActivity {
         delayedHide(100);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            // This ID represents the Home or Up button.
+            NavUtils.navigateUpFromSameTask(this);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void toggle() {
         if (mVisible) {
             hide();
@@ -153,6 +132,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void hide() {
         // Hide UI first
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.hide();
+        }
         mVisible = false;
 
         // Schedule a runnable to remove the status and navigation bar after a delay
@@ -180,63 +163,4 @@ public class MainActivity extends AppCompatActivity {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
-
-    private void addImage() {
-        Intent intent = new Intent();
-        // Show only images, no videos or anything else
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        // Always show the chooser (if there are multiple options available)
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-
-            String s = "";
-
-            ImageSetterFragment fragment = ImageSetterFragment.newInstance(data, this);
-            fragmentTransaction.add(R.id.imageContainer, fragment);
-            fragmentTransaction.commit();
-        }
-    }
-
-    public List<Fragment> getVisibleImageFragments() {
-        List<Fragment> allFragments = getSupportFragmentManager().getFragments();
-        if (allFragments == null || allFragments.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<Fragment> visibleFragments = new ArrayList<>();
-        for (Fragment fragment : allFragments) {
-            if (fragment.isVisible() && fragment instanceof ImageSetterFragment ) {
-                visibleFragments.add(fragment);
-            }
-        }
-        return visibleFragments;
-    }
-
-    private void confirmEntry() {
-        List<Fragment> imageFragments = getVisibleImageFragments();
-
-        List<String> imageUris = Collections.emptyList();
-
-        for (Fragment imageFragment:imageFragments ) {
-            imageUris.add(((ImageSetterFragment) imageFragment).getData().getData().toString());
-        }
-
-        String name = this.name.getEditText().getText().toString();
-        String bio = this.bio.getEditText().getText().toString();
-
-        Intent intent = new Intent(this, HelloActivity.class);
-
-        startActivity(intent);
-    }
-
 }
