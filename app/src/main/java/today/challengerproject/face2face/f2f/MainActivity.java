@@ -2,8 +2,8 @@ package today.challengerproject.face2face.f2f;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -11,30 +11,21 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static today.challengerproject.face2face.f2f.HelperMethods.dipToPixels;
+
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
 public class MainActivity extends AppCompatActivity {
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
-
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
 
     private int PICK_IMAGE_REQUEST = 1;
 
@@ -54,11 +45,9 @@ public class MainActivity extends AppCompatActivity {
             // Note that some of these constants are new as of API 16 (Jelly Bean)
             // and API 19 (KitKat). It is safe to use them, as they are inlined
             // at compile-time and do nothing on earlier devices.
-            mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            mContentView.setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_FULLSCREEN
                     | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                     | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         }
     };
@@ -67,29 +56,17 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             // Delayed display of UI elements
+            mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
         }
     };
-    private boolean mVisible;
     private final Runnable mHideRunnable = new Runnable() {
         @Override
         public void run() {
             hide();
         }
     };
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    private final View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (AUTO_HIDE) {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-            return false;
-        }
-    };
+
+    private boolean mVisible;
 
     private TextInputLayout name;
     private TextInputLayout bio;
@@ -100,19 +77,30 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        getSupportActionBar().hide();
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
 
-        mVisible = true;
         mContentView = findViewById(R.id.fullscreen_content);
+
         FloatingActionButton addImgButton = findViewById(R.id.add_image);
 
-
-        mContentView.setOnClickListener(new View.OnClickListener() {
+        mContentView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
-            public void onClick(View view) {
-                toggle();
+            public void onGlobalLayout() {
+                Rect r = new Rect();
+
+                mContentView.getWindowVisibleDisplayFrame(r);
+
+                int heightDiff = mContentView.getRootView().getHeight() - (r.bottom - r.top);
+                if (heightDiff > dipToPixels(mContentView.getContext(), 100)) {
+                    show();
+                }else{
+                    hide();
+                }
             }
         });
+
         addImgButton.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -131,6 +119,16 @@ public class MainActivity extends AppCompatActivity {
         this.name = findViewById(R.id.inputName);
         this.bio = findViewById(R.id.inputBio);
 
+        name.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean focus) {
+                if (focus) {
+                    show();
+                } else {
+                    hide();
+                }
+            }
+        });
     }
 
     @Override
@@ -143,18 +141,9 @@ public class MainActivity extends AppCompatActivity {
         delayedHide(100);
     }
 
-    private void toggle() {
-        if (mVisible) {
-            hide();
-        } else {
-            show();
-        }
-    }
 
     private void hide() {
-        // Hide UI first
         mVisible = false;
-
         // Schedule a runnable to remove the status and navigation bar after a delay
         mHideHandler.removeCallbacks(mShowPart2Runnable);
         mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
@@ -162,16 +151,12 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("InlinedApi")
     private void show() {
-        // Show the system bar
-        mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         mVisible = true;
 
         // Schedule a runnable to display UI elements after a delay
         mHideHandler.removeCallbacks(mHidePart2Runnable);
         mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
     }
-
     /**
      * Schedules a call to hide() in delay milliseconds, canceling any
      * previously scheduled calls.
@@ -199,17 +184,17 @@ public class MainActivity extends AppCompatActivity {
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-            String s = "";
-
             ImageSetterFragment fragment = ImageSetterFragment.newInstance(data, this);
             fragmentTransaction.add(R.id.imageContainer, fragment);
             fragmentTransaction.commit();
         }
+
+        hide();
     }
 
     public List<Fragment> getVisibleImageFragments() {
         List<Fragment> allFragments = getSupportFragmentManager().getFragments();
-        if (allFragments == null || allFragments.isEmpty()) {
+        if (allFragments.isEmpty()) {
             return Collections.emptyList();
         }
 
@@ -225,17 +210,30 @@ public class MainActivity extends AppCompatActivity {
     private void confirmEntry() {
         List<Fragment> imageFragments = getVisibleImageFragments();
 
-        List<String> imageUris = Collections.emptyList();
+        ArrayList<String> imageUris = new ArrayList<>();
 
         for (Fragment imageFragment:imageFragments ) {
-            imageUris.add(((ImageSetterFragment) imageFragment).getData().getData().toString());
+            ImageSetterFragment f = (ImageSetterFragment) imageFragment;
+            Intent i = f.getData();
+            if ( i.getData() != null) {
+                imageUris.add(i.getData().toString());
+            }
         }
 
-        String name = this.name.getEditText().getText().toString();
-        String bio = this.bio.getEditText().getText().toString();
+        String name = "";
+        String bio = "";
+
+        if (this.name.getEditText() != null) {
+            name = this.name.getEditText().getText().toString();
+        }
+        if (this.bio.getEditText() != null) {
+            bio = this.bio.getEditText().getText().toString();
+        }
 
         Intent intent = new Intent(this, HelloActivity.class);
-
+        intent.putExtra("NAME", name);
+        intent.putExtra("BIO", bio);
+        intent.putExtra("IMAGES", imageUris);
         startActivity(intent);
     }
 
